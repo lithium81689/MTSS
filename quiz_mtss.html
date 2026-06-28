@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MTSS Quiz</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f9f8f5;
+  --text:#1a1a18;--text2:#5a5a56;--text3:#8a8a85;
+  --border:#e0dfd8;--border2:#c8c7c0;
+  --accent:#3b6fd4;--accent-bg:#e8eef9;--accent-text:#1e3d8a;
+  --success:#2e7d4f;--success-bg:#e6f4ec;--success-border:#a8d8b8;
+  --danger:#b52a2a;--danger-bg:#faeaea;--danger-border:#f0b0b0;
+  --warning:#7a5500;--warning-bg:#fff8e6;--warning-border:#f0d080;
+  --radius:8px;--radius-lg:14px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;line-height:1.6}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;height:56px}
+header h1{font-size:16px;font-weight:600;color:var(--text)}
+header .badge{font-size:12px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px}
+.container{max-width:760px;margin:0 auto;padding:2rem 1.5rem}
+.score-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.score-group{display:flex;gap:1.5rem}
+.score-item{text-align:center}
+.score-num{font-size:24px;font-weight:600;color:var(--text)}
+.score-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.progress-wrap{flex:1;max-width:280px}
+.progress-lbl{font-size:12px;color:var(--text3);margin-bottom:5px;display:flex;justify-content:space-between}
+.progress-bar{height:6px;background:var(--surface2);border-radius:4px;border:1px solid var(--border);overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+.btn{padding:8px 18px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn:hover{background:var(--surface2);border-color:var(--text3)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-primary:hover{background:#2e5bb8;border-color:#2e5bb8}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.25rem;transition:box-shadow .2s}
+.qcard.done{opacity:.85}
+.qmeta{display:flex;align-items:center;gap:8px;margin-bottom:.75rem}
+.qnum{font-size:12px;color:var(--text3);font-weight:500}
+.qtype{font-size:11px;padding:2px 8px;border-radius:12px;background:var(--accent-bg);color:var(--accent-text);font-weight:500}
+.qtype.multi{background:#f0eaff;color:#5a2db5}
+.qtext{font-size:15px;font-weight:500;color:var(--text);margin-bottom:1rem;line-height:1.55}
+.opts{display:flex;flex-direction:column;gap:4px;margin-bottom:.75rem}
+.opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:var(--radius);cursor:pointer;border:1px solid transparent;transition:background .1s,border-color .1s}
+.opt:hover:not(.locked){background:var(--surface2);border-color:var(--border)}
+.opt.locked{cursor:default}
+.opt input{margin-top:3px;cursor:pointer;flex-shrink:0;accent-color:var(--accent)}
+.opt.locked input{cursor:default}
+.opt label{font-size:14px;color:var(--text);cursor:pointer;line-height:1.5}
+.opt.locked label{cursor:default}
+.opt.correct{background:var(--success-bg);border-color:var(--success-border)}
+.opt.correct label{color:var(--success)}
+.opt.wrong{background:var(--danger-bg);border-color:var(--danger-border)}
+.opt.wrong label{color:var(--danger)}
+.opt.missed{background:var(--warning-bg);border-color:var(--warning-border)}
+.opt.missed label{color:var(--warning)}
+.verify-row{display:flex;align-items:center;gap:10px}
+.feedback{font-size:13px;font-weight:600;padding:4px 10px;border-radius:var(--radius)}
+.feedback.ok{color:var(--success);background:var(--success-bg)}
+.feedback.no{color:var(--danger);background:var(--danger-bg)}
+.legend{font-size:12px;color:var(--text3);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.legend span{display:inline-flex;align-items:center;gap:4px;margin-right:10px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+.dot.g{background:var(--success)}.dot.r{background:var(--danger)}.dot.y{background:var(--warning)}
+.finish-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;margin-bottom:2rem}
+.finish-card h2{font-size:22px;font-weight:600;margin-bottom:.5rem}
+.finish-card p{color:var(--text2);margin-bottom:1.25rem}
+.big-score{font-size:48px;font-weight:700;color:var(--accent);margin:.5rem 0}
+</style>
+</head>
+<body>
+<header>
+  <h1>MTSS Quiz</h1>
+  <span class="badge" id="hbadge">56 domande</span>
+</header>
+<div class="container">
+  <div id="app"></div>
+</div>
+<script>
+const ALL_QUESTIONS=[
+{q:"Nella Continuous Integration, se il processo di build fallisce cosa è consigliato fare?",type:"single",opts:[
+{t:"Si blocca lo sviluppo, tutto il team lavora per risolvere il problema.",c:false},
+{t:"Lo sviluppatore deve essere in grado o di risolvere il problema o di ripristinare la versione precedente.",c:true},
+{t:"Se la build è fallita a causa di un test di unità, commentare o escludere il test che ha fatto fallire la build.",c:false}
+]},
+{q:"Quali tra i seguenti tipi di test NON sono test funzionali?",type:"multi",opts:[
+{t:"Analisi statica del codice",c:true},{t:"Test di accettazione UAT",c:false},
+{t:"Test di performance",c:true},{t:"Test di unità",c:false},{t:"Test di integrazione",c:false}
+]},
+{q:"Quale tra le seguenti è la migliore definizione di Deployment Pipeline?",type:"single",opts:[
+{t:"È la modellazione del processo di test tramite una successione di fasi (stages) e verifiche (gates).",c:false},
+{t:"È la modellazione del processo di build tramite una successione di fasi (stages) e verifiche (gates).",c:false},
+{t:"È la modellazione del processo di rilascio tramite una successione di fasi (stages) e verifiche (gates).",c:true},
+{t:"È la modellazione del processo di rilascio tramite la definizione di uno script (bash o sh) che può essere seguito dagli sviluppatori in qualsiasi momento.",c:false}
+]},
+{q:"Quali sono le principali funzioni di Apache Maven?",type:"multi",opts:[
+{t:"Dependency Management: le dipendenze di progetto vengono specificate in un file di configurazione e Maven si occupa di scaricarle in automatico.",c:true},
+{t:"È un Issue Tracking System che permette di gestire work item di tipo test. Il workflow di ogni work item viene definito nel file pom.xml.",c:false},
+{t:"È un Build Tool. Sono definite delle Build Lifecycle che permettono di configurare ed eseguire il processo di build.",c:true},
+{t:"È un VCS di tipo distribuito specializzato per la gestione di progetti Java.",c:false}
+]},
+{q:"A quali categorie appartengono i test di unità?",type:"multi",opts:[
+{t:"Verifica",c:true},{t:"Dinamico",c:true},{t:"Il SUT è considerato white box",c:true},
+{t:"Non funzionale",c:false},{t:"Validazione",c:false},{t:"Funzionale",c:true},
+{t:"Statico",c:false},{t:"Il SUT è considerato black box",c:false}
+]},
+{q:"Quali tra le seguenti sono le caratteristiche di un processo di build?",type:"multi",opts:[
+{t:"Ripetibile: una esecuzione ripetuta dà lo stesso risultato.",c:true},
+{t:"Non Ripetibile: a partire dagli stessi sorgenti ogni esecuzione dà risultati diversi.",c:false},
+{t:"Completo: indipendente da fonti non specificate nello script di build.",c:true},
+{t:"Dipendente dall'ambiente di esecuzione.",c:false},
+{t:"Portabile: indipendente il più possibile dall'ambiente di esecuzione.",c:true}
+]},
+{q:"Quale tra le seguenti è la migliore definizione di Artifact Repository?",type:"single",opts:[
+{t:"È un tipo di Distributed VCS.",c:false},
+{t:"È uno strumento software progettato per ottimizzare il download e l'archiviazione dei file sorgenti prodotti durante lo sviluppo del software.",c:false},
+{t:"È uno strumento software progettato per ottimizzare il download e l'archiviazione dei file binari utilizzati e prodotti nello sviluppo del software.",c:true},
+{t:"È uno strumento software progettato per ottimizzare il download e l'archiviazione di archivi (tar o zip).",c:false}
+]},
+{q:"Quali dei seguenti NON è un ruolo del framework SCRUM?",type:"single",opts:[
+{t:"Product Owner",c:false},{t:"Scrum Master",c:false},{t:"Project Manager",c:true},{t:"Development Team",c:false}
+]},
+{q:"Quale tra le seguenti è la migliore definizione per \"Validazione\"?",type:"single",opts:[
+{t:"Convalidare che il software sia conforme ai suoi obiettivi (fit for purpose).",c:true},
+{t:"Cercare difetti per migliorare le qualità del software.",c:false}
+]},
+{q:"Quali tra queste sono le principali caratteristiche del framework SCRUM?",type:"multi",opts:[
+{t:"Facile da capire",c:true},{t:"Difficile da padroneggiare",c:true},{t:"Pesante",c:false},
+{t:"Leggero",c:true},{t:"Difficile da capire",c:false}
+]},
+{q:"Quale tra i seguenti strumenti di Automated Code Review storicizza l'andamento della qualità e permette di verificare se c'è un miglioramento o un deterioramento del progetto nel tempo (Continuous Code Inspection)?",type:"single",opts:[
+{t:"SonarQube",c:true},{t:"FindBugs/SpotBugs",c:false},{t:"Checkstyle",c:false},{t:"PMD",c:false}
+]},
+{q:"In Git dove si presentano e vengono risolti i conflitti?",type:"single",opts:[
+{t:"In locale",c:true},{t:"Nel repository locale",c:false},{t:"Nel server remoto",c:false}
+]},
+{q:"Quali tra le seguenti affermazioni relative alla Continuous Delivery sono vere?",type:"multi",opts:[
+{t:"Il rilascio può essere fatto in ogni momento in ogni ambiente (premendo un bottone).",c:true},
+{t:"Non vengono eseguiti test di sistema.",c:false},
+{t:"Il rilascio è uno stage della Continuous Delivery che deve essere fatto in automatico ad ogni modifica.",c:false},
+{t:"Un cambiamento al sistema può potenzialmente essere rilasciato in produzione.",c:true},
+{t:"Continuous Delivery è il passo successivo alla Continuous Integration.",c:true}
+]},
+{q:"Nella fase di configurazione di un progetto in un Issue Tracking System quali sono le attività del ruolo del Manager?",type:"multi",opts:[
+{t:"Crea un nuovo progetto.",c:true},
+{t:"Avvia e completa la lavorazione dei work item.",c:false},
+{t:"Aggiunge gli utenti e assegna ruoli/permessi.",c:true},
+{t:"Registra il lavoro svolto per completare le attività.",c:false},
+{t:"Aggiorna la stima a finire delle attività.",c:false},
+{t:"Definisce il processo da seguire (tipi di work item, campi custom, workflow).",c:true}
+]},
+{q:"Quale tra le seguenti affermazioni sui test di integrazione è vera?",type:"single",opts:[
+{t:"I test di integrazione verificano se sono rispettati i contratti di interfaccia tra più moduli o sub system.",c:true},
+{t:"I test di integrazione sono più veloci da configurare ed eseguire rispetto al test di unità.",c:false},
+{t:"I test di integrazione verificano il comportamento dell'intero sistema.",c:false},
+{t:"I test di integrazione verificano l'unità, il più piccolo sottosistema possibile (in Java: classe o metodo) che può essere testato separatamente.",c:false}
+]},
+{q:"L'acronimo CRISP descrive le caratteristiche del processo di build che sono:",type:"single",opts:[
+{t:"Coeso, Ripetibile, Indipendente dall'ordine di esecuzione, Schedulabile, Portabile.",c:false},
+{t:"Completo, Ripetibile, Informativo, Stoppable (che si può interrompere), Portabile.",c:false},
+{t:"Completo, Ripetibile, Informativo, Schedulabile, Portabile.",c:true},
+{t:"Cheap (economico di risorse), Rapido, Indipendente dall'ordine di esecuzione, Schedulabile, Portabile.",c:false}
+]},
+{q:"A quali categorie di test appartiene l'analisi statica?",type:"multi",opts:[
+{t:"Non funzionale",c:true},{t:"Black box: non è a disposizione il codice sorgente del progetto",c:false},
+{t:"Funzionale",c:false},{t:"Statico",c:true},{t:"Dinamico",c:false},
+{t:"White box: è a disposizione il codice sorgente del progetto",c:true}
+]},
+{q:"Quale tra le seguenti è la migliore definizione di Continuous Integration?",type:"single",opts:[
+{t:"Consiste nell'esecuzione di un processo che costruisce il prodotto, esegue i test di unità, installa il prodotto in ambienti di test dove vengono eseguiti i test di sistema e infine rilascio automatico nell'ambiente di produzione.",c:false},
+{t:"Consiste nell'allineamento frequente degli ambienti di lavoro degli sviluppatori verso l'ambiente condiviso (mainline).",c:true},
+{t:"Consiste nell'allineamento e verifica giornaliero, di solito durante la notte, degli ambienti di lavoro degli sviluppatori verso l'ambiente condiviso (mainline).",c:false}
+]},
+{q:"Quali tra le seguenti affermazioni sui test di accettazione sono vere?",type:"multi",opts:[
+{t:"I test di accettazione sono conosciuti anche come UAT.",c:true},
+{t:"Nei test di accettazione il sistema sotto test (SUT) è considerato come black box.",c:true},
+{t:"I test di accettazione sono di tipo statico.",c:false},
+{t:"Nei test di accettazione il sistema sotto test (SUT) è considerato come white box.",c:false},
+{t:"I test di accettazione fanno parte della categoria \"Verifica\".",c:false}
+]},
+{q:"In Git, un insieme di modifiche a uno o più file (diff) che sono state esplicitamente validate (nell'area di staging) e salvate nel repository rappresentano un:",type:"single",opts:[
+{t:"Merge",c:false},{t:"Pull Request",c:false},{t:"Commit",c:true},{t:"Branch",c:false}
+]},
+{q:"Quali tra le seguenti sono le migliori definizioni per Workflow di un work item?",type:"multi",opts:[
+{t:"È un insieme di stati e priorità che un work item attraversa durante il suo ciclo di vita.",c:false},
+{t:"È un insieme di stati e transizioni che un work item attraversa durante il suo ciclo di vita.",c:true},
+{t:"Permette di implementare un processo da seguire per registrare il lavoro svolto in un work item.",c:false},
+{t:"Permette di implementare un processo da seguire per completare l'attività rappresentata da un work item.",c:true}
+]},
+{q:"Nel contesto di Configuration Management, quale tra le seguenti è la migliore definizione di idempotenza?",type:"single",opts:[
+{t:"Applicando la stessa operazione più volte il risultato è sempre lo stesso.",c:true},
+{t:"Applicando operazioni diverse si ottiene sempre lo stesso risultato.",c:false},
+{t:"Applicando la stessa operazione più volte il risultato è sempre diverso.",c:false}
+]},
+{q:"Quali tra le seguenti sono configurazioni che possono essere specificate nel file pom.xml?",type:"multi",opts:[
+{t:"Le configurazioni dei plugin da utilizzare nel processo di build.",c:true},
+{t:"Risultati delle esecuzioni dei test di unità.",c:false},
+{t:"Le dipendenze del progetto.",c:true},
+{t:"L'identificativo del progetto (Gruppo, Artefatto e Versione).",c:true},
+{t:"Issue, bug e attività svolte in una determinata versione.",c:false},
+{t:"I file da ignorare/non salvare nel VCS.",c:false}
+]},
+{q:"Quali tra i seguenti test possono essere eseguiti nel processo di integrazione continua?",type:"multi",opts:[
+{t:"Test di sistema",c:false},
+{t:"Test di integrazione tra sub system interni ed esterni (es. DB)",c:false},
+{t:"Analisi statica del codice",c:true},
+{t:"Test di performance",c:false},
+{t:"Test di integrazione tra sub system interni",c:true},
+{t:"Test di unità",c:true}
+]},
+{q:"Quale tra i seguenti comportamenti NON è necessario in un framework per creare i test di unità?",type:"single",opts:[
+{t:"Un modo standard per avviare l'intero sistema/progetto da verificare.",c:true},
+{t:"Un modo per configurare l'ambiente di esecuzione del test.",c:false},
+{t:"Un modo standard per eseguire ed esprimere se il test è stato superato, se è fallito o se sono stati prodotti errori.",c:false},
+{t:"Un modo per analizzare i valori aspettati, prodotti dalle unità.",c:false},
+{t:"Un modo per selezionare un test o un insieme di test da eseguire.",c:false}
+]},
+{q:"Quali sono le principali funzioni di un Issue Tracking System?",type:"multi",opts:[
+{t:"Gestire la priorità delle attività di un progetto software.",c:true},
+{t:"Avere un'istantanea delle attività da fare, completare e in corso d'opera.",c:true},
+{t:"Storicizzare e condividere sorgenti di un progetto software.",c:false},
+{t:"Rendere automatico il processo di build e test di un progetto software.",c:false},
+{t:"Condividere le informazioni con il team di sviluppo, il Project Manager e il cliente.",c:true}
+]},
+{q:"La pratica TDD prevede che nel ciclo di sviluppo si ripetano 3 fasi. Ordinarle correttamente: 1) WRITE PRODUCTION CODE &nbsp; 2) CLEAN UP CODE &nbsp; 3) RE(WRITE) A TEST",type:"single",opts:[
+{t:"1-2-3",c:false},{t:"3-2-1",c:false},{t:"3-1-2",c:true},
+{t:"2-1-3",c:false},{t:"1-3-2",c:false},{t:"2-3-1",c:false}
+]},
+{q:"Nel framework SCRUM, quale tra i seguenti NON è un ruolo del Product Owner?",type:"single",opts:[
+{t:"Definisce le priorità delle caratteristiche del prodotto in base al valore che il mercato gli attribuisce.",c:false},
+{t:"Rappresenta il desiderio del committente.",c:false},
+{t:"È responsabile dell'adozione dei valori e delle pratiche SCRUM.",c:true},
+{t:"Definisce le caratteristiche del prodotto.",c:false}
+]},
+{q:"Quale tra le seguenti è la migliore definizione della funzionalità Bacheca (Board) in un Issue Tracking System?",type:"single",opts:[
+{t:"Permette di visualizzare i work item di uno o più progetti, offrendo un modo flessibile e interattivo per la gestione e la visualizzazione dei dati di sintesi sulle attività in corso.",c:true},
+{t:"Permette di avere una visione globale delle ore svolte per completare i work item di un progetto.",c:false},
+{t:"Permette di creare filtri e report sulle attività di un progetto gestito attraverso un Issue Tracking System.",c:false},
+{t:"Permette di aggiungere note e commenti sulle attività di un progetto gestito con un Issue Tracking System.",c:false}
+]},
+{q:"Quale tra le seguenti affermazioni NON è corretta?",type:"single",opts:[
+{t:"Avviare la fase di test il prima possibile permette di risparmiare sui costi del progetto.",c:false},
+{t:"Il processo di test non deve essere avviato quando il progetto è al termine, ma deve andare in parallelo con il processo di sviluppo.",c:false},
+{t:"Per la maggior parte delle applicazioni non è possibile testare tutte le possibili combinazioni di dati e scenari.",c:false},
+{t:"Il test può dimostrare che l'applicazione è priva di errori.",c:true}
+]},
+{q:"Quali tra le seguenti affermazioni relative alla Continuous Delivery NON è vera?",type:"single",opts:[
+{t:"Per realizzare questa pratica è consigliato avere un repository dove rilasciare gli artefatti e da cui recuperare le informazioni del commit nel VCS da cui è stato creato l'artefatto.",c:false},
+{t:"È fondamentale utilizzare lo stesso script per effettuare il rilascio in differenti ambienti.",c:false},
+{t:"Eseguire il processo di build solo una volta garantisce di utilizzare lo stesso artefatto per effettuare tutte le verifiche in ogni ambiente.",c:false},
+{t:"Il processo di build per la produzione dei binari deve essere eseguito più volte (una per ogni artefatto dove verrà rilasciato il prodotto).",c:true}
+]},
+{q:"Nella fase di utilizzo di un Issue Tracking System, quali sono le attività svolte dal Project Manager?",type:"multi",opts:[
+{t:"Monitora l'avanzamento e il completamento delle attività.",c:true},
+{t:"Esegue tutti i work item di tipo test del progetto.",c:false},
+{t:"Effettua solo le attività di configurazione. Tutte le altre attività vengono svolte solo dagli sviluppatori.",c:false},
+{t:"Definisce le nuove versioni.",c:true}
+]},
+{q:"Quale tra le seguenti è la migliore definizione per Continuous Delivery?",type:"single",opts:[
+{t:"È una disciplina di sviluppo del software che fa in modo che il prodotto venga rilasciato in modo automatico nell'ambiente di produzione ad ogni modifica.",c:false},
+{t:"È una disciplina di sviluppo del software in cui si crea software in modo tale che possa essere rilasciato in produzione in qualsiasi momento.",c:true},
+{t:"È una disciplina di sviluppo del software che permette di eseguire il processo di build e test di unità ad ogni commit. Le successive attività di test di sistema e rilascio vengono svolte manualmente.",c:false}
+]},
+{q:"Quale tra le seguenti è la definizione migliore per Analisi statica del codice?",type:"single",opts:[
+{t:"È l'attività che ha l'obiettivo di verificare se sono rispettati i contratti di interfaccia tra più moduli o sub-system.",c:false},
+{t:"È un'analisi di un computer software che viene effettuata manualmente (senza automatismi) in un programma in esecuzione.",c:false},
+{t:"È un'analisi di un computer software che viene effettuata senza richiedere l'esecuzione del programma.",c:true},
+{t:"Verifica il comportamento di una funzionalità atomica di un programma.",c:false}
+]},
+{q:"A quali categorie appartengono i test di performance?",type:"multi",opts:[
+{t:"Statico",c:false},{t:"Dinamico",c:true},{t:"Non funzionale",c:true},{t:"Funzionale",c:false}
+]},
+{q:"In quale evento del framework Scrum: il gruppo di lavoro presenta ciò che ha realizzato durante lo sprint e viene validato e accettato quanto realizzato?",type:"single",opts:[
+{t:"Sprint Review",c:true},{t:"Sprint Retrospective",c:false},{t:"Sprint Planning",c:false},{t:"Daily Scrum",c:false}
+]},
+{q:"Quali tra i seguenti strumenti/pratiche troviamo nella Continuous Delivery?",type:"multi",opts:[
+{t:"Infrastructure monitoring",c:false},{t:"Continuous Integration",c:true},
+{t:"Service desk",c:false},{t:"Configuration management",c:true},{t:"Artifact repository",c:true}
+]},
+{q:"Quali tra le seguenti sono funzionalità presenti in strumenti di analisi statica del codice?",type:"multi",opts:[
+{t:"Verificare le performance dell'applicazione in determinate condizioni di carico",c:false},
+{t:"Verificare il comportamento di una funzionalità dei programmi",c:false},
+{t:"Imporre rispetto di convenzioni e stili",c:true},
+{t:"Validare che il programma rispetti i requisiti funzionali concordati con il cliente/committente",c:false},
+{t:"Controllare metriche ed indicatori (complessità ciclomatica, grafo delle dipendenze, numerosità linee di codice)",c:true},
+{t:"Verificare la congruità della documentazione",c:true}
+]},
+{q:"Quali tra le seguenti affermazioni relative alla Continuous Integration sono vere?",type:"multi",opts:[
+{t:"Il codice del progetto deve essere gestito in VCS",c:true},
+{t:"La pratica può essere attivata in un progetto senza avvisare il team di sviluppo",c:false},
+{t:"Il processo di build del progetto deve essere automatico",c:true},
+{t:"Il processo di build del progetto NON deve essere automatico",c:false},
+{t:"È possibile implementare il processo solo se il codice sorgente è gestito in centralized control system",c:false}
+]},
+{q:"Completare la definizione di test di unità: i test di unità sono ___, prodotto ___, che esercitano un'unità del programma.",type:"single",opts:[
+{t:"dei test — dallo scrum master",c:false},
+{t:"del codice — dallo sviluppatore",c:true},
+{t:"dei work item — dal project manager",c:false}
+]},
+{q:"In quale dei seguenti tipi di VCS, se il nodo centrale non è disponibile, è possibile continuare a lavorare e registrare i cambiamenti?",type:"single",opts:[
+{t:"CENTRALIZED e DISTRIBUTED VCS",c:false},{t:"DISTRIBUTED VCS",c:true},{t:"CENTRALIZED VCS",c:false}
+]},
+{q:"Caratteristiche di un Issue Tracking System (più di una):",type:"multi",opts:[
+{t:"Avere istantanea delle attività da fare",c:true},
+{t:"Gestire la priorità delle attività di un progetto software",c:true},
+{t:"Condivisione informazioni con team sviluppo, Project Manager, cliente",c:true}
+]},
+{q:"A quali categorie appartengono i test di accettazione?",type:"multi",opts:[
+{t:"Test dinamico",c:true},{t:"Test statico",c:false},{t:"Funzionale",c:true},
+{t:"Il SUT è considerato come white box",c:false},{t:"Non funzionale",c:false},
+{t:"Il SUT è considerato come black box",c:true}
+]},
+{q:"Per implementare la pratica della Continuous Integration (CI) è necessario:",type:"multi",opts:[
+{t:"Il processo di build del progetto sia automatico",c:true},
+{t:"Il codice del progetto venga gestito in un VCS",c:true},
+{t:"Le attività del progetto siano gestite con un issue tracking system",c:false},
+{t:"Il processo di build esegua delle verifiche automatiche",c:true},
+{t:"Le configurazioni siano gestite con un configuration management system",c:false}
+]},
+{q:"Nella fase di utilizzo di un ITS, quali sono le attività svolte dal Project Manager o capo progetto? (domanda estesa)",type:"multi",opts:[
+{t:"Creare un nuovo progetto",c:false},{t:"Selezionano i work item",c:true},
+{t:"Avvia e completa la lavorazione dei work item",c:true},
+{t:"Aggiorna la stima a finire delle attività",c:false},
+{t:"Registra il lavoro svolto per completare le attività",c:false},
+{t:"Effettuano il rilascio",c:true},
+{t:"Documentano lo stato dell'attività e compilano i campi nel work item",c:true},
+{t:"Completano tutte le attività presenti nell'iterazione",c:true},
+{t:"Ricevono le notifiche dei work item assegnati",c:true}
+]},
+{q:"Quali tra le seguenti affermazioni sui repository di artefatti è vera?",type:"single",opts:[
+{t:"I repository di tipo release permettono di rilasciare più volte la stessa versione di un artefatto.",c:false},
+{t:"I repository di tipo snapshot vengono utilizzati per storicizzare gli artefatti di tipo rilascio.",c:false},
+{t:"È consigliato che gli artefatti di tipo release contengano almeno una dipendenza di tipo snapshot.",c:false},
+{t:"I repository di tipo snapshot permettono di rilasciare più volte gli artefatti di sviluppo.",c:true}
+]},
+{q:"Dai sorgenti di un progetto software com'è possibile capire che il processo di build è gestito con Maven?",type:"single",opts:[
+{t:"Dalla presenza del file Jenkinsfile nella root del progetto.",c:false},
+{t:"Dalla presenza del file pom.xml nella root del progetto.",c:true},
+{t:"Dalla presenza del file travis.yml nella root del progetto.",c:false},
+{t:"Non è possibile capirlo dai sorgenti.",c:false}
+]},
+{q:"Qual è la migliore definizione dell'obiettivo 'reproducibility' nella Configuration Management?",type:"single",opts:[
+{t:"Essere in grado di configurare qualsiasi ambiente in modo completamente automatizzato e sapere che qualsiasi nuovo ambiente riprodotto dalla stessa configurazione è identico.",c:true},
+{t:"Essere in grado di configurare qualsiasi ambiente in modo completamente automatizzato.",c:false},
+{t:"Essere in grado di configurare qualsiasi ambiente in modo manuale e sapere che qualsiasi nuovo ambiente riprodotto dalla stessa configurazione è diverso.",c:false}
+]},
+{q:"Quali tra le seguenti affermazioni su Git sono vere?",type:"multi",opts:[
+{t:"Permettono il lock dei file",c:false},
+{t:"Single point of failure: se si corrompe il server centrale si perde tutta la storia",c:false},
+{t:"È incentivato lo sviluppo su branch diversi (locali o condivisi)",c:true},
+{t:"La maggior parte delle operazioni viene fatta in remoto",c:false},
+{t:"La maggior parte delle operazioni viene fatta in locale",c:true}
+]},
+{q:"Nel framework Scrum quale tra le seguenti NON è un ruolo dello Scrum Master?",type:"single",opts:[
+{t:"È responsabile della redditività del prodotto (ROI)",c:true},
+{t:"Favorisce una stretta cooperazione tra tutti i ruoli e le funzioni",c:false},
+{t:"Protegge il gruppo di lavoro da interferenze esterne",c:false},
+{t:"È responsabile dell'adozione dei valori e delle pratiche Scrum",c:false}
+]},
+{q:"Quali tra le seguenti affermazioni sono vere nella pratica della Continuous Integration?",type:"multi",opts:[
+{t:"Non è richiesto che ogni sviluppatore possa eseguire localmente il processo di build e test",c:false},
+{t:"Il processo di build e test deve essere veloce",c:true},
+{t:"Gli sviluppatori devono integrare gli sviluppi solo prima di un rilascio",c:false},
+{t:"Gli sviluppatori devono integrare frequentemente gli sviluppi (più di una volta al giorno)",c:true},
+{t:"È più prioritario implementare nuove funzionalità rispetto a mantenere il processo di build del prodotto funzionante",c:false}
+]},
+{q:"Quali tra i seguenti componenti NON sono necessari in un framework per creare i test di unità?",type:"single",opts:[
+{t:"Un modo per analizzare i valori aspettati, prodotti dalle unità",c:false},
+{t:"Un modo per configurare l'ambiente di esecuzione del test",c:false},
+{t:"Un modo standard per eseguire ed esprimere se il test è stato superato, se fallito o se sono stati prodotti degli errori",c:false},
+{t:"Un modo standard per avviare l'intero sistema/progetto da verificare",c:true},
+{t:"Un modo per selezionare un test o un insieme di test da seguire",c:false}
+]},
+{q:"Quale evento del framework SCRUM si celebra dopo la Sprint Review e prima del prossimo Sprint Planning, e si valuta ciò che sta funzionando e ciò che non sta funzionando nel progetto?",type:"single",opts:[
+{t:"Sprint Review",c:false},{t:"Daily Scrum",c:false},{t:"Sprint Retrospective",c:true}
+]},
+{q:"Quale tra i seguenti strumenti è un CENTRALIZED SCM (CVCS)?",type:"single",opts:[
+{t:"GIT",c:false},{t:"SVN",c:true},{t:"Mercurial",c:false}
+]}
+];
+
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+let questions=[];
+let answered={};
+let score=0;
+
+function init(){
+  questions=shuffle(ALL_QUESTIONS).map(q=>({...q,opts:shuffle(q.opts)}));
+  answered={};score=0;
+  renderAll();
+}
+
+function renderAll(){
+  const total=questions.length;
+  document.getElementById('hbadge').textContent=total+' domande';
+  const app=document.getElementById('app');
+  let html='<div class="score-bar"><div class="score-group"><div class="score-item"><div class="score-num" id="sd-score">0</div><div class="score-lbl">Corrette</div></div><div class="score-item"><div class="score-num" id="sd-done">0</div><div class="score-lbl">Risposte</div></div><div class="score-item"><div class="score-num" id="sd-tot">'+total+'</div><div class="score-lbl">Totale</div></div></div><div class="progress-wrap"><div class="progress-lbl"><span>Avanzamento</span><span id="sd-pct">0%</span></div><div class="progress-bar"><div class="progress-fill" id="sd-fill" style="width:0%"></div></div></div><button class="btn" onclick="init()">&#8635; Nuovo tentativo</button></div>';
+  questions.forEach((q,qi)=>{
+    const isMulti=q.type==='multi';
+    html+=`<div class="qcard" id="qcard-${qi}"><div class="qmeta"><span class="qnum">Domanda ${qi+1}/${total}</span><span class="qtype ${isMulti?'multi':''}">${isMulti?'risposta multipla':'risposta singola'}</span></div><div class="qtext">${q.q}</div><div class="opts" id="opts-${qi}">`;
+    q.opts.forEach((o,oi)=>{
+      html+=`<div class="opt" id="opt-${qi}-${oi}" onclick="toggleOpt(${qi},${oi})"><input type="${isMulti?'checkbox':'radio'}" name="q${qi}" id="i${qi}-${oi}" value="${oi}"><label for="i${qi}-${oi}">${o.t}</label></div>`;
+    });
+    html+=`</div><div class="verify-row"><button class="btn btn-primary" id="vbtn-${qi}" onclick="verify(${qi})">Verifica</button><span class="feedback" id="fb-${qi}" style="display:none"></span></div><div class="legend" style="display:none" id="leg-${qi}"><span><span class="dot g"></span>Corretta selezionata</span><span><span class="dot r"></span>Sbagliata selezionata</span><span><span class="dot y"></span>Corretta non selezionata</span></div></div>`;
+  });
+  app.innerHTML=html;
+}
+
+function toggleOpt(qi,oi){
+  if(answered[qi]!==undefined) return;
+  const q=questions[qi];
+  if(q.type==='single'){
+    document.querySelectorAll(`input[name="q${qi}"]`).forEach(el=>el.checked=false);
+  }
+  const inp=document.getElementById(`i${qi}-${oi}`);
+  inp.checked=!inp.checked;
+}
+
+function verify(qi){
+  const q=questions[qi];
+  const isMulti=q.type==='multi';
+  let selected=[];
+  if(isMulti){
+    document.querySelectorAll(`input[name="q${qi}"]:checked`).forEach(el=>selected.push(parseInt(el.value)));
+  } else {
+    const el=document.querySelector(`input[name="q${qi}"]:checked`);
+    if(el) selected=[parseInt(el.value)];
+  }
+  if(!selected.length) return;
+  const correctIdxs=q.opts.map((o,i)=>o.c?i:-1).filter(i=>i>=0);
+  const isCorrect=isMulti
+    ? correctIdxs.length===selected.length && correctIdxs.every(i=>selected.includes(i))
+    : q.opts[selected[0]]&&q.opts[selected[0]].c;
+  answered[qi]=isCorrect;
+  if(isCorrect) score++;
+  q.opts.forEach((o,oi)=>{
+    const div=document.getElementById(`opt-${qi}-${oi}`);
+    div.classList.add('locked');
+    document.getElementById(`i${qi}-${oi}`).disabled=true;
+    if(o.c&&selected.includes(oi)) div.classList.add('correct');
+    else if(!o.c&&selected.includes(oi)) div.classList.add('wrong');
+    else if(o.c&&!selected.includes(oi)) div.classList.add('missed');
+  });
+  document.getElementById(`vbtn-${qi}`).disabled=true;
+  const fb=document.getElementById(`fb-${qi}`);
+  fb.style.display='inline-flex';
+  fb.className='feedback '+(isCorrect?'ok':'no');
+  fb.textContent=isCorrect?'✓ Corretto!':'✗ Risposta errata';
+  document.getElementById(`leg-${qi}`).style.display='block';
+  document.getElementById(`qcard-${qi}`).classList.add('done');
+  updateScore();
+}
+
+function updateScore(){
+  const done=Object.keys(answered).length;
+  const total=questions.length;
+  const pct=Math.round(done/total*100);
+  document.getElementById('sd-score').textContent=score;
+  document.getElementById('sd-done').textContent=done;
+  document.getElementById('sd-fill').style.width=pct+'%';
+  document.getElementById('sd-pct').textContent=pct+'%';
+}
+
+init();
+</script>
+</body>
+</html>
